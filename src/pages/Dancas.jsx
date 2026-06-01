@@ -2,28 +2,33 @@ import { useEffect, useMemo, useState } from "react";
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import { db } from "../firebase";
 
-export default function Dancas({ user, isAdmin }) {
-  const ROWS = 8;
-  const COLS = 2;
+const SERIES = ["1º", "2º", "3º", "4º", "5º", "6º", "7º", "8º", "9º", "1EM", "2EM", "3EM"];
 
-  const CELL_SIZE_EDITING = 58;
-  const CELL_SIZE_VIEW = 58;
-  const CELL_FONT_EDITING = 10;
-  const CELL_FONT_VIEW = 12;
+export default function Dancas({ user, isAdmin }) {
+  const ROWS = SERIES.length;
+  const COLS = 3; // Série | Início | Fim
+
+  const CELL_WIDTH = 90;
+  const CELL_HEIGHT = 58;
+  const CELL_FONT = 12;
 
   const ref = useMemo(() => doc(db, "dancas", "quadro"), []);
   const [loading, setLoading] = useState(true);
-
   const [editing, setEditing] = useState(false);
   const [cells, setCells] = useState(() => Array(ROWS * COLS).fill(""));
-
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
 
   const idx = (r, c) => r * COLS + c;
 
   function emptyCells() {
-    return Array(ROWS * COLS).fill("");
+    const base = Array(ROWS * COLS).fill("");
+
+    SERIES.forEach((serie, r) => {
+      base[idx(r, 0)] = serie;
+    });
+
+    return base;
   }
 
   function cleanCells(value) {
@@ -37,6 +42,10 @@ export default function Dancas({ user, isAdmin }) {
       else if (v === null || v === undefined) fixed[i] = "";
       else fixed[i] = String(v);
     }
+
+    SERIES.forEach((serie, r) => {
+      fixed[idx(r, 0)] = serie;
+    });
 
     return fixed;
   }
@@ -106,26 +115,13 @@ export default function Dancas({ user, isAdmin }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (loading) {
-    return <div style={{ padding: 24 }}>Carregando...</div>;
-  }
-
-  const cellSize = editing ? CELL_SIZE_EDITING : CELL_SIZE_VIEW;
-  const cellFont = editing ? CELL_FONT_EDITING : CELL_FONT_VIEW;
+  if (loading) return <div style={{ padding: 24 }}>Carregando...</div>;
 
   return (
     <div style={{ paddingTop: 8 }}>
       <h1 style={{ fontSize: 42, margin: "8px 0 10px" }}>Danças</h1>
 
-      <div
-        style={{
-          display: "flex",
-          gap: 10,
-          alignItems: "center",
-          flexWrap: "wrap",
-          marginBottom: 10,
-        }}
-      >
+      <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", marginBottom: 10 }}>
         {isAdmin && !editing && (
           <button
             onClick={() => {
@@ -137,7 +133,6 @@ export default function Dancas({ user, isAdmin }) {
               borderRadius: 12,
               border: "1px solid #d1d5db",
               background: "#fff",
-              color: "#000",
               cursor: "pointer",
               fontWeight: 800,
             }}
@@ -163,22 +158,6 @@ export default function Dancas({ user, isAdmin }) {
           </button>
         )}
 
-        {isAdmin && !editing && (
-          <button
-            onClick={() => saveNow()}
-            style={{
-              padding: "10px 14px",
-              borderRadius: 12,
-              border: "1px solid #d1d5db",
-              background: "#fff",
-              cursor: "pointer",
-              fontWeight: 800,
-            }}
-          >
-            Salvar agora
-          </button>
-        )}
-
         <button
           onClick={() => load()}
           style={{
@@ -193,11 +172,7 @@ export default function Dancas({ user, isAdmin }) {
           Recarregar
         </button>
 
-        {status ? (
-          <span style={{ fontSize: 13, color: "#1f3a8a", fontWeight: 800 }}>
-            {status}
-          </span>
-        ) : null}
+        {status ? <span style={{ fontSize: 13, color: "#1f3a8a", fontWeight: 800 }}>{status}</span> : null}
       </div>
 
       <div
@@ -207,15 +182,20 @@ export default function Dancas({ user, isAdmin }) {
           overflow: "hidden",
           background: "#fff",
           display: "grid",
-          gridTemplateColumns: `repeat(${COLS}, ${cellSize}px)`,
+          gridTemplateColumns: `repeat(${COLS}, ${CELL_WIDTH}px)`,
           width: "fit-content",
           maxWidth: "100%",
         }}
       >
+        <div style={headerCell}>Série</div>
+        <div style={headerCell}>Início</div>
+        <div style={headerCell}>Fim</div>
+
         {Array.from({ length: ROWS }).map((_, r) =>
           Array.from({ length: COLS }).map((__, c) => {
             const i = idx(r, c);
             const value = cells[i] ?? "";
+            const isSerieCol = c === 0;
 
             return (
               <div
@@ -223,14 +203,16 @@ export default function Dancas({ user, isAdmin }) {
                 style={{
                   borderRight: c === COLS - 1 ? "none" : "1px solid #e5e7eb",
                   borderBottom: r === ROWS - 1 ? "none" : "1px solid #e5e7eb",
-                  width: cellSize,
-                  height: cellSize,
+                  width: CELL_WIDTH,
+                  height: CELL_HEIGHT,
                   padding: 6,
                   boxSizing: "border-box",
+                  background: isSerieCol ? "#f9fafb" : "#fff",
+                  fontWeight: isSerieCol ? 900 : 400,
                 }}
               >
-                {editing && isAdmin ? (
-                  <textarea
+                {editing && isAdmin && !isSerieCol ? (
+                  <input
                     value={value}
                     onChange={(e) => {
                       const v = e.target.value;
@@ -240,26 +222,27 @@ export default function Dancas({ user, isAdmin }) {
                         return next;
                       });
                     }}
-                    placeholder=""
+                    placeholder={c === 1 ? "13:00" : "13:30"}
                     style={{
                       width: "100%",
                       height: "100%",
-                      resize: "none",
                       border: "none",
                       outline: "none",
-                      fontSize: cellFont,
+                      fontSize: CELL_FONT,
                       fontFamily: "system-ui",
-                      lineHeight: 1.2,
                     }}
                   />
                 ) : (
                   <div
                     style={{
                       whiteSpace: "pre-wrap",
-                      fontSize: cellFont,
+                      fontSize: CELL_FONT,
                       fontFamily: "system-ui",
                       lineHeight: 1.2,
                       color: "#111827",
+                      display: "grid",
+                      placeItems: isSerieCol ? "center" : "start",
+                      height: "100%",
                     }}
                   >
                     {value}
@@ -279,3 +262,16 @@ export default function Dancas({ user, isAdmin }) {
     </div>
   );
 }
+
+const headerCell = {
+  width: 90,
+  height: 38,
+  padding: 6,
+  boxSizing: "border-box",
+  borderRight: "1px solid #e5e7eb",
+  borderBottom: "1px solid #e5e7eb",
+  background: "#f3f4f6",
+  fontWeight: 900,
+  display: "grid",
+  placeItems: "center",
+};
