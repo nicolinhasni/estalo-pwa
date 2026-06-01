@@ -15,7 +15,6 @@ import {
 import { db } from "../firebase";
 
 const SERIES = ["1º","2º","3º","4º","5º","6º","7º","8º","9º","1EM","2EM","3EM","adulto"];
-
 const MUSICAS = ["Música 1", "Música 2", "Música 3"];
 
 function formatTs(ts) {
@@ -37,8 +36,8 @@ function reduzirImagem(file) {
 
       img.onload = () => {
         const canvas = document.createElement("canvas");
-
         const maxSize = 500;
+
         let width = img.width;
         let height = img.height;
 
@@ -60,8 +59,7 @@ function reduzirImagem(file) {
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, width, height);
 
-        const base64 = canvas.toDataURL("image/jpeg", 0.65);
-        resolve(base64);
+        resolve(canvas.toDataURL("image/jpeg", 0.65));
       };
 
       img.onerror = reject;
@@ -84,6 +82,9 @@ export default function Serenatas() {
   const [historico, setHistorico] = useState([]);
   const [detalhes, setDetalhes] = useState(null);
 
+  const [qtdFila, setQtdFila] = useState(0);
+  const [qtdHistorico, setQtdHistorico] = useState(0);
+
   useEffect(() => {
     const qFila = query(collection(db, "serenatas"), orderBy("pos", "asc"));
     const unsubFila = onSnapshot(
@@ -91,6 +92,7 @@ export default function Serenatas() {
       (snap) => {
         const arr = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
         setFila(arr);
+        setQtdFila(arr.length);
       },
       (e) => setErr(e?.message || "Erro ao carregar fila.")
     );
@@ -101,6 +103,7 @@ export default function Serenatas() {
       (snap) => {
         const arr = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
         setHistorico(arr);
+        setQtdHistorico(arr.length);
       },
       (e) => setErr(e?.message || "Erro ao carregar histórico.")
     );
@@ -126,7 +129,7 @@ export default function Serenatas() {
     try {
       const img = await reduzirImagem(file);
       setFoto(img);
-    } catch (e) {
+    } catch {
       setErr("Erro ao carregar a foto.");
     }
   }
@@ -257,11 +260,12 @@ export default function Serenatas() {
 
   const styles = {
     card: {
-      border: "1px solid #e5e7eb",
-      borderRadius: 14,
-      padding: 14,
-      background: "#fff",
-    },
+  border: "1px solid rgba(0,0,0,.08)",
+  borderRadius: 20,
+  padding: 18,
+  background: "rgba(255,255,255,.92)",
+  boxShadow: "0 10px 30px rgba(0,0,0,.08)",
+},
     input: {
       width: "100%",
       padding: "12px 12px",
@@ -296,15 +300,16 @@ export default function Serenatas() {
       fontWeight: 900,
     },
     row: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      gap: 12,
-      border: "1px solid #e5e7eb",
-      borderRadius: 14,
-      padding: 12,
-      background: "#fff",
-    },
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: 12,
+  border: "1px solid rgba(0,0,0,.08)",
+  borderRadius: 18,
+  padding: 14,
+  background: "rgba(255,255,255,.95)",
+  boxShadow: "0 6px 18px rgba(0,0,0,.07)",
+},
     avatar: {
       width: 42,
       height: 42,
@@ -329,13 +334,75 @@ export default function Serenatas() {
       border: "1px solid #e5e7eb",
       padding: 14,
     },
+    miniDash: {
+      display: "flex",
+      gap: 12,
+      marginBottom: 16,
+      flexWrap: "wrap",
+    },
+    miniCard: {
+  background: "rgba(255,255,255,.95)",
+  border: "1px solid rgba(0,0,0,.08)",
+  borderRadius: 18,
+  padding: "16px 22px",
+  minWidth: 140,
+  boxShadow: "0 6px 18px rgba(0,0,0,.08)",
+},
   };
 
   return (
+  <div
+  style={{
+    minHeight: "100vh",
+    padding: 20,
+    backgroundColor: "#f5f1eb",
+    backgroundImage:
+      "radial-gradient(circle at 15% 20%, rgba(128,0,0,.08), transparent 220px), radial-gradient(circle at 85% 70%, rgba(80,0,80,.08), transparent 220px)",
+  }}
+>
+  <div
+    style={{
+      display: "flex",
+      alignItems: "flex-start",
+      justifyContent: "space-between",
+      gap: 20,
+      marginBottom: 20,
+      flexWrap: "wrap",
+    }}
+  >
     <div>
-      <h1 style={{ fontSize: 34, fontWeight: 900, margin: "6px 0 12px" }}>
+      <h1 style={{ margin: 0, fontSize: 42, fontWeight: 900 }}>
         Fila de Serenatas
       </h1>
+
+      <div style={{ color: "#5b2131", fontWeight: 800, marginTop: 4 }}>
+        Grupo de Teatro Estalo 2026
+      </div>
+    </div>
+
+    <img
+      src="/logo-estalo.png"
+      alt="Estalo"
+      style={{
+        width: 140,
+        borderRadius: 20,
+        boxShadow: "0 8px 20px rgba(0,0,0,.2)",
+        border: "3px solid white",
+      }}
+    />
+  </div>
+
+      <div style={styles.miniDash}>
+        <div style={styles.miniCard}>
+          <div style={{ fontSize: 12, color: "#6b7280" }}>Na fila</div>
+          <div style={{ fontSize: 28, fontWeight: 900 }}>{qtdFila}</div>
+        </div>
+
+        <div style={styles.miniCard}>
+          <div style={{ fontSize: 12, color: "#6b7280" }}>Concluídas</div>
+          <div style={{ fontSize: 28, fontWeight: 900 }}>{qtdHistorico}</div>
+        </div>
+      </div>
 
       <div style={{ ...styles.card, marginBottom: 18 }}>
         <div style={{ display: "grid", gap: 10 }}>
