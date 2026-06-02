@@ -272,6 +272,7 @@ export default function Serenatas() {
       borderRadius: 10,
       border: "1px solid #d1d5db",
       outline: "none",
+      boxSizing: "border-box"
     },
     btn: {
       padding: "10px 12px",
@@ -339,6 +340,7 @@ export default function Serenatas() {
       gap: 12,
       marginBottom: 16,
       flexWrap: "wrap",
+      maxWidth: "100%"
     },
     miniCard: {
   background: "rgba(255,255,255,.95)",
@@ -361,35 +363,62 @@ export default function Serenatas() {
   }}
 >
   <div
-    style={{
-      display: "flex",
-      alignItems: "flex-start",
-      justifyContent: "space-between",
-      gap: 20,
-      marginBottom: 20,
-      flexWrap: "wrap",
-    }}
-  >
-    <div>
-      <h1 style={{ margin: 0, fontSize: 42, fontWeight: 900 }}>
-        Fila de Serenatas
-      </h1>
+  style={{
+    display: "flex",
+    alignItems: "flex-start",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    gap: 20,
+    marginBottom: 20,
+    flexWrap: "wrap",
+  }}
+><div
+  style={{
+    display: "grid",
+    gap: 10,
+    gridTemplateColumns:
+      "repeat(auto-fit, minmax(180px, 1fr))",
+  }}
+><div
+  style={{
+    display: "grid",
+    gap: 10,
+    gridTemplateColumns:
+      "repeat(auto-fit, minmax(180px, 1fr))",
+  }}
+>
+  <input placeholder="Nome" />
 
-      <div style={{ color: "#5b2131", fontWeight: 800, marginTop: 4 }}>
-        Grupo de Teatro Estalo 2026
-      </div>
-    </div>
+  <select>
+    <option>1º</option>
+  </select>
+
+  <select>
+    <option>Música 1</option>
+  </select>
+
+  <button>Escolher foto</button>
+</div>
+  
+    <h1
+  style={{
+    fontSize: "clamp(28px, 8vw, 42px)",
+    fontWeight: 900,
+  }}
+>
+  Fila de Serenatas
+</h1>
 
     <img
-      src="/logo-estalo.png"
-      alt="Estalo"
-      style={{
-        width: 140,
-        borderRadius: 20,
-        boxShadow: "0 8px 20px rgba(0,0,0,.2)",
-        border: "3px solid white",
-      }}
-    />
+  src="/logo-estalo.png"
+  alt="Estalo"
+  style={{
+    width: "min(120px, 35vw)",
+    borderRadius: 18,
+    boxShadow: "0 8px 20px rgba(0,0,0,.2)",
+    border: "3px solid white",
+  }}
+/>
   </div>
 
       <div style={styles.miniDash}>
